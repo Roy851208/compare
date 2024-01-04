@@ -39,7 +39,7 @@ func HandleWebSocket(c *gin.Context) {
 	connections[id] = conn
 	connectedMu.Unlock()
 
-	if err := conn.WriteMessage(websocket.TextMessage, []byte("等待遊戲開始")); err != nil {
+	if err := conn.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("玩家%d已連接，等待遊戲開始\n", id))); err != nil {
 		fmt.Println(err)
 		return
 	}

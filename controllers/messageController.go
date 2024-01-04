@@ -18,6 +18,12 @@ func HandlePlayerMessage(conn *websocket.Conn, playerId int, message string) {
 	}
 }
 
+func sendMessageToAll(message string) {
+	for id := range connections {
+		SendMessageToClient(id, message)
+	}
+}
+
 func SendMessageToClient(playerId int, message string) {
 	connectedMu.Lock()
 	defer connectedMu.Unlock()
