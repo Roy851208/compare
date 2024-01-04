@@ -1,65 +1,50 @@
 package main
 
 import (
-	"log"
+	"bufio"
+	"fmt"
 	"os"
-	"os/signal"
-	"time"
+	"strings"
 
 	"github.com/gorilla/websocket"
 )
 
 func main() {
-	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt)
-
-	url := "ws://192.168.31.109:8088/ws"
-	log.Printf("connecting to %s", url)
-
-	c, _, err := websocket.DefaultDialer.Dial(url, nil)
+	conn, _, err := websocket.DefaultDialer.Dial("ws://localhost:8080/ws", nil)
 	if err != nil {
-		log.Fatal("dial:", err)
+		fmt.Println(err)
+		return
 	}
-	defer c.Close()
+	defer conn.Close()
 
-	done := make(chan struct{})
-
+	// 启动一个 goroutine 读取服务器发送的消息
 	go func() {
-		defer close(done)
 		for {
-			_, message, err := c.ReadMessage()
+			_, message, err := conn.ReadMessage()
 			if err != nil {
-				log.Println("read:", err)
+				fmt.Println(err)
 				return
 			}
-			log.Printf("received: %s", message)
+			fmt.Printf("接收到服务器消息: %s\n", message)
 		}
 	}()
 
-	ticker := time.NewTicker(time.Second)
-	defer ticker.Stop()
-
+	// 从终端读取用户输入并发送到服务器
+	reader := bufio.NewReader(os.Stdin)
 	for {
-		select {
-		case <-done:
+		input, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Println(err)
 			return
-		// case t := <-ticker.C:
-		// 	err := c.WriteMessage(websocket.TextMessage, []byte(t.String()))
-		// 	if err != nil {
-		// 		log.Println("write:", err)
-		// 		return
-		// 	}
-		case <-interrupt:
-			log.Println("interrupt")
-			err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
-			if err != nil {
-				log.Println("write close:", err)
-				return
-			}
-			select {
-			case <-done:
-			case <-time.After(time.Second):
-			}
+		}
+
+		// 去除换行符
+		input = strings.TrimSpace(input)
+
+		// 发送消息到服务器
+		err = conn.WriteMessage(websocket.TextMessage, []byte(input))
+		if err != nil {
+			fmt.Println(err)
 			return
 		}
 	}

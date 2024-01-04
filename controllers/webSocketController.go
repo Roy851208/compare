@@ -32,7 +32,7 @@ func HandleWebSocket(c *gin.Context) {
 	models.Players[id] = 0
 	fmt.Printf("Player%d connected.\n", id)
 
-	models.WaitingNum <- id
+	models.WaitingNum <- connectedCnt
 
 	// 添加到connections映射
 	connectedMu.Lock()
@@ -45,11 +45,12 @@ func HandleWebSocket(c *gin.Context) {
 	}
 
 	for {
-		_, _, err := conn.ReadMessage()
+		_, msg, err := conn.ReadMessage()
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-	}
 
+		HandlePlayerMessage(conn, id, string(msg))
+	}
 }
