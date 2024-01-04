@@ -3,6 +3,7 @@ package controllers
 import (
 	"compare/models"
 	"fmt"
+	"log"
 	"sync"
 
 	"github.com/gin-gonic/gin"
@@ -27,27 +28,23 @@ func HandleWebSocket(c *gin.Context) {
 	connectedMu.Lock()
 	connectedCnt++
 	connectedMu.Unlock()
+	models.WaitingNum <- connectedCnt
 
 	id := connectedCnt
 	models.Players[id] = 0
-	fmt.Printf("Player%d connected.\n", id)
-
-	models.WaitingNum <- connectedCnt
+	log.Printf("Player%d connected.\n", id)
 
 	// 添加到connections映射
 	connectedMu.Lock()
 	connections[id] = conn
 	connectedMu.Unlock()
 
-	if err := conn.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("玩家%d已連接，等待遊戲開始\n", id))); err != nil {
-		fmt.Println(err)
-		return
-	}
+	SendMessageToClient(id, fmt.Sprintf("玩家%d已連接，等待遊戲開始\n", id))
 
 	for {
 		_, msg, err := conn.ReadMessage()
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 

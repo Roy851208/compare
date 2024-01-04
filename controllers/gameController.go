@@ -10,11 +10,10 @@ import (
 func StartGame() {
 	for {
 		<-models.WaitingNum
-		fmt.Println("新玩家入場")
-
 		// 玩家進入後告訴客戶端是否準備好
 		if len(models.Players) == 2 {
 			for {
+				time.Sleep(1 * time.Second)
 				sendMessageToAll(models.GameStartMessage)
 				// 等待兩位玩家都準備好
 				for !CheckReady() {
@@ -31,9 +30,9 @@ func StartGame() {
 }
 
 func GetCard() {
-	for i := range models.Players {
-		models.Players[i] = rand.Intn(13) + 1
-		SendMessageToClient(i, fmt.Sprintf("models.Players%d 獲得點數為 %d\n", i, models.Players[i]))
+	for id := range models.Players {
+		models.Players[id] = rand.Intn(13) + 1
+		sendMessageToAll(fmt.Sprintf("Players%d 獲得點數為 %d", id, models.Players[id]))
 	}
 	if models.Players[0] == models.Players[1] {
 		sendMessageToAll("點數相同，重新分配點數")

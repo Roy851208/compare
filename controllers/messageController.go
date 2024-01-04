@@ -14,7 +14,7 @@ func HandlePlayerMessage(conn *websocket.Conn, playerId int, message string) {
 		models.PlayersReady[playerId] = true
 		SendMessageToClient(playerId, fmt.Sprintf("玩家%d準備完成", playerId))
 	default:
-		fmt.Printf("Player%d 傳入錯誤訊息\n", playerId)
+		SendMessageToClient(playerId, fmt.Sprintf("玩家%d輸入錯誤", playerId))
 	}
 }
 
