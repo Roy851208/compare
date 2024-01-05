@@ -32,6 +32,7 @@ func HandleWebSocket(c *gin.Context) {
 
 	id := connectedCnt
 	models.Players[id] = 0
+	models.PlayersReady[id] = false
 	log.Printf("Player%d connected.\n", id)
 
 	// 添加到connections映射
